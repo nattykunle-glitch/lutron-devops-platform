@@ -1,3 +1,4 @@
+@Library('mini-devops-shared-lib') _
 pipeline {
     agent any
 
@@ -24,22 +25,14 @@ pipeline {
             }
         }
 
-        stage('Test') {
+                stage('Test') {
             agent {
                 docker { image 'python:3.12-slim' }
             }
             steps {
-                dir('app') {
-                    sh '''
-                        python -m venv .venv
-                        . .venv/bin/activate
-                        pip install -r requirements.txt pytest
-                        pytest test_app.py -v
-                    '''
-                }
+                runTests(path: 'app', framework: 'pytest')
             }
         }
-
         stage('Package') {
             steps {
                 dir('app') {
