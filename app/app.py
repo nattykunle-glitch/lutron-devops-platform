@@ -52,6 +52,5 @@ def set_brightness(device_id):
     return jsonify(device), 200
 
 
-55  if __name__ == "__main__":
-56      app.run(host="0.0.0.0", port=5000)
-57
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)
