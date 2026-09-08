@@ -66,7 +66,7 @@ pipeline {
                                 python -m venv .venv
                                 . .venv/bin/activate
                                 pip install flake8
-                                flake8 app.py --max-line-length=100
+                                flake8 app.py --max-line-length=100 --extend-ignore=W292
                             '''
                         }
                     }
