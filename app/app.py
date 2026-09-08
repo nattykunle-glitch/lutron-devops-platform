@@ -5,7 +5,10 @@ This tiny Flask API stands in for one of Lutron's cloud services --
 something a real DevOps platform would build, test, scan, package,
 and deploy for hundreds of engineers.
 """
+import time
+
 from flask import Flask, jsonify, request
+from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
 
 app = Flask(__name__)
 
@@ -14,6 +17,34 @@ DEVICES = {
     "1": {"id": "1", "name": "Living Room Dimmer", "brightness": 80, "on": True},
     "2": {"id": "2", "name": "Kitchen Shade", "brightness": 0, "on": False},
 }
+
+# --- Prometheus metrics ---
+REQUEST_COUNT = Counter(
+    "device_service_requests_total", "Total requests", ["method", "endpoint", "status"]
+)
+REQUEST_LATENCY = Histogram(
+    "device_service_request_latency_seconds", "Request latency", ["endpoint"]
+)
+
+
+@app.before_request
+def start_timer():
+    request.start_time = time.time()
+
+
+@app.after_request
+def record_metrics(response):
+    latency = time.time() - request.start_time
+    REQUEST_LATENCY.labels(endpoint=request.path).observe(latency)
+    REQUEST_COUNT.labels(
+        method=request.method, endpoint=request.path, status=response.status_code
+    ).inc()
+    return response
+
+
+@app.get("/metrics")
+def metrics():
+    return generate_latest(), 200, {"Content-Type": CONTENT_TYPE_LATEST}
 
 
 @app.get("/health")
