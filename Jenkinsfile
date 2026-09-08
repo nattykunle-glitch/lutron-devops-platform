@@ -24,7 +24,7 @@ pipeline {
             }
         }
 
-        stage('Test') {
+                stage('Test') {
             agent {
                 docker { image 'python:3.12-slim' }
             }
@@ -33,13 +33,29 @@ pipeline {
                     sh '''
                         python -m venv .venv
                         . .venv/bin/activate
-                        pip install -r requirements.txt pytest
-                        pytest test_app.py -v
+                        pip install -r requirements.txt pytest flake8
                     '''
                 }
+                parallel(
+                    "Unit Tests": {
+                        dir('app') {
+                            sh '''
+                                . .venv/bin/activate
+                                pytest test_app.py -v
+                            '''
+                        }
+                    },
+                    "Lint": {
+                        dir('app') {
+                            sh '''
+                                . .venv/bin/activate
+                                flake8 app.py --max-line-length=100
+                            '''
+                        }
+                    }
+                )
             }
         }
-
         stage('Package') {
             steps {
                 dir('app') {
