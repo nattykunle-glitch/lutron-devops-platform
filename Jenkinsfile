@@ -10,10 +10,13 @@ pipeline {
         }
 
         stage('Build') {
+            agent {
+                docker { image 'python:3.12-slim' }
+            }
             steps {
                 dir('app') {
                     sh '''
-                        python3 -m venv .venv
+                        python -m venv .venv
                         . .venv/bin/activate
                         pip install -r requirements.txt
                     '''
@@ -22,11 +25,15 @@ pipeline {
         }
 
         stage('Test') {
+            agent {
+                docker { image 'python:3.12-slim' }
+            }
             steps {
                 dir('app') {
                     sh '''
+                        python -m venv .venv
                         . .venv/bin/activate
-                        pip install pytest
+                        pip install -r requirements.txt pytest
                         pytest test_app.py -v
                     '''
                 }
